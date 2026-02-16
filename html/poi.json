@@ -15,12 +15,12 @@
     },
     {
         "ID": "3001",
-        "name": "March ridge",
+        "name": "March Ridge",
         "description": "",
         "x": 10121,
         "y": 12720,
         "Importance": 1,
-        "location": "March ridge",
+        "location": "March Ridge",
         "tags": [
             "town",
             "city"
@@ -134,12 +134,12 @@
     },
     {
         "ID": "3010",
-        "name": "Louisville airport",
+        "name": "Louisville Airport",
         "description": "",
         "x": 15436,
         "y": 2940,
         "Importance": 1,
-        "location": "Louisville airport",
+        "location": "Louisville Airport",
         "tags": []
     },
     {
@@ -7572,5 +7572,23 @@
         "description": "Has a stove, sink, an outhouse, and a shed",
         "location": "Doe Valley",
         "tags": ["cabin", "woods", "stove", "sink", "outhouse", "shed"]
+    },
+    {
+        "ID": "1823",
+        "x": 805,
+        "y": 11853,
+        "name": "Train station",
+        "description": "",
+        "location": "Irvington",
+        "tags": []
+    },
+    {
+        "ID": "1824",
+        "x": 2485,
+        "y": 13940,
+        "name": "Police station",
+        "description": "",
+        "location": "Irvington",
+        "tags": []
     }
 ]

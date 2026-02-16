@@ -1,14 +1,14 @@
 pz_root: |- # project zomboid game folder
-    C:\Program Files (x86)\Steam\steamapps\common\ProjectZomboid
+    /home/debian/disk/ProjectZomboid
 
 output_path: |- # render output folder
-    S:\DZImap
+    /home/debian/disk/pzmap42_13
 
 mod_root: |- # steam workshop folder for project zomboid
-    C:\Program Files (x86)\Steam\steamapps\workshop\content\108600
+    /home/debian/disk/ProjectZomboid
 
 custom_root: |- # custom file folder
-    .
+    /home/debian/disk/pzmap42_13/
 
 # for multi map set
 # output_entry: map set name
@@ -58,14 +58,14 @@ render_conf:
     # show profiling infomation
     profile: false
     # thread count
-    worker_count: 16
+    worker_count: 12
     # set hotkey to stop render (rerun render to resume)
     # hotkey examples:
     #     <ctrl>+<alt>+a    ctrl + alt + a
     #     a                 the key "a"
     #     <f8>              f8
     #     <cmd>+<f2>        windows key + f2
-    break_key: '<f8>'
+    break_key: ''
 
     # dzi conf
     # dzi tile size
@@ -164,7 +164,7 @@ render_conf:
     top_view_color_mode: avg
     
     # font settings
-    default_font: arial.ttf
+    default_font: DejaVuSans.ttf
     default_font_size: 20
     # room font settings, using default font if omitted
     # room_font: arial.ttf

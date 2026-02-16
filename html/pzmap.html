@@ -2,6 +2,7 @@
 <html>
   <head>
     <title id="page_title"></title>
+    <link rel="icon" href="map.png">
     <script type="text/javascript" src="openseadragon/openseadragon.js"></script>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
@@ -72,7 +73,7 @@
             <a href="https://github.com/openseadragon/openseadragon/" target="_blank">OpenSeaDragon</a><br><br>
             <strong>Created by:</strong><br>
             <a href="https://pzwiki.net/wiki/Project_Zomboid_Wiki" target="_blank">PZwiki Volunteers</a>
-            <br><p>Last updated:<br>Build 42.11.0</p>
+            <br><p>Last updated:<br>Build 42.13.2</p>
           </div>
         </div>
       </div>
@@ -123,6 +124,12 @@
           
           <h3>Coordinates</h3>
           <p>• Click "Lock Coordinates" then click on the map. The coordinates will be copied to your clipboard.</p>
+
+          <h3>URL Search</h3>
+          <p>• Use URL parameters to automatically search for locations:</p>
+          <p>• <code>?zombie={type}</code> - Search for zombie spawn areas (e.g., ?zombie=restaurant)</p>
+          <p>• <code>?item={container}~{room}</code> - Search for containers in rooms (e.g., ?item=fridge~kitchen)</p>
+          <p>• <code>?XxYxZ</code> - Pan to coordinates with optional zoom level (e.g., ?12800x9600x5)</p>
         </div>
       </div>
     </div>

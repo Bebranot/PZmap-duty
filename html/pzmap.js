@@ -180,6 +180,14 @@ function initOSD() {
         }
     });
 
+    g.viewer.addHandler('full-page', function(event) {
+        if (event.fullPage) {
+            document.body.appendChild(g.svg.svg);
+        } else {
+            document.getElementById('working_area').appendChild(g.svg.svg);
+        }
+    });
+
     //g.viewer.addHandler('zoom', function(event) {});
 
     g.viewer.addHandler('canvas-press', function(event) {
@@ -309,6 +317,19 @@ function init(callback=null) {
                             g.pendingItemSearch = null;
                         }, 100); // Small delay to ensure everything is fully ready
                     }
+
+                    // Process any pending zombie search after everything is loaded
+                    if (g.pendingZombieSearch) {
+                        setTimeout(() => {
+                            // Only process if POIs are enabled, otherwise markers won't be visible
+                            if (g.poisui) {
+                                handleZombieSearchFromURL(g.pendingZombieSearch);
+                            } else {
+                                return;
+                            }
+                            g.pendingZombieSearch = null;
+                        }, 100); // Small delay to ensure everything is fully ready
+                    }
                 });
             });
         });
@@ -336,11 +357,18 @@ function checkAndPanFromURL() {
         g.pendingItemSearch = query;
         return;
     }
+
+    // Check if this is a zombie search query - defer until after page load
+    if (query.startsWith('zombie=')) {
+        // Store the query for later processing after map is fully loaded
+        g.pendingZombieSearch = query;
+        return;
+    }
     
     const parts = query.split("x").map(Number);
     
     if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-        console.error("Invalid query string format. Expected 'XxYxZ', 'XxY', or 'item={container_type}~{room}'.");
+        console.error("Invalid query string format. Expected 'XxYxZ', 'XxY', 'item={container_type}~{room}', or 'zombie={zombie_type}'.");
         return;
     }
     
@@ -466,6 +494,146 @@ async function handleItemSearchFromURL(query) {
     } catch (error) {
         console.error('❌ Error processing container search:', error);
     }
+}
+
+/**
+ * Handles zombie search from URL format: ?zombie={zombie_type}
+ * @param {string} query - The query string (e.g., "zombie=restaurant")
+ */
+async function handleZombieSearchFromURL(query) {
+    // Parse the query: zombie={zombie_type}
+    const zombieType = query.substring(7).toLowerCase(); // Remove "zombie="
+
+    if (!zombieType) {
+        console.error("Invalid zombie query format. Expected 'zombie={zombie_type}'.");
+        return;
+    }
+
+    console.log(`🔍 Loading ${zombieType} zombie spawn areas...`);
+
+    try {
+        // Wait for map data to be available
+        await waitForMapData();
+
+        // Find matching zombie objects
+        const matchingZombies = findMatchingZombies(zombieType);
+        if (matchingZombies.length === 0) {
+            console.warn(`❌ No ${zombieType} zombie spawn areas found.`);
+            return;
+        }
+
+        console.log(`✅ Found ${matchingZombies.length} ${zombieType} zombie spawn areas`);
+
+        // Add zombie markers (no panning - just show all like "Show All Results")
+        addZombieMarkers(matchingZombies, zombieType);
+
+    } catch (error) {
+        console.error('❌ Error processing zombie search:', error);
+    }
+}
+
+/**
+ * Waits for map data to be available (optimized with max retries)
+ * @returns {Promise<void>}
+ */
+async function waitForMapData() {
+    return new Promise((resolve, reject) => {
+        let retries = 0;
+        const maxRetries = 50; // Max 5 seconds (50 * 100ms)
+
+        const checkMapData = () => {
+            if (g.base_map && g.base_map.marks && g.base_map.marks.objects) {
+                resolve();
+            } else if (retries >= maxRetries) {
+                console.error('Timeout waiting for map data to be available');
+                reject(new Error('Map data not available'));
+            } else {
+                retries++;
+                setTimeout(checkMapData, 100);
+            }
+        };
+        checkMapData();
+    });
+}
+
+/**
+ * Finds zombie objects that match the given zombie type
+ * @param {string} zombieType - The zombie type to search for
+ * @returns {Array} Array of matching zombie objects
+ */
+function findMatchingZombies(zombieType) {
+    if (!g.base_map || !g.base_map.marks || !g.base_map.marks.objects) {
+        console.error('Object data not available');
+        return [];
+    }
+
+    const objectMarks = g.base_map.marks.objects.db.all();
+    const matchingZombies = [];
+
+    objectMarks.forEach(obj => {
+        const objName = (obj.name || '').toLowerCase();
+        const objColor = (obj.color || '').toLowerCase();
+
+        // Only look for red objects (zombies)
+        if (objColor === 'red' && objName.includes(zombieType)) {
+            // Extract coordinates from object data
+            let objX = 0, objY = 0;
+
+            if (obj.rects && obj.rects[0]) {
+                // Rectangle-based - use center of first rectangle
+                const rect = obj.rects[0];
+                objX = rect.x + rect.width / 2;
+                objY = rect.y + rect.height / 2;
+            } else if (obj.x !== undefined && obj.y !== undefined) {
+                // Direct coordinates
+                objX = obj.x;
+                objY = obj.y;
+            }
+
+            matchingZombies.push({
+                ...obj,
+                x: objX,
+                y: objY,
+                layer: obj.layer || 0
+            });
+        }
+    });
+
+    return matchingZombies;
+}
+
+/**
+ * Adds markers for found zombie spawn areas
+ * @param {Array} zombies - Array of zombie objects
+ * @param {string} zombieType - The zombie type name
+ */
+function addZombieMarkers(zombies, zombieType) {
+    const zombieMarkers = zombies.map((zombie, index) => ({
+        id: `zombie-${zombieType}-${index}`,
+        name: `${zombieType} Zombie Spawn`,
+        desc: `${zombieType} zombie spawn area at layer ${zombie.layer}`,
+        x: zombie.x,
+        y: zombie.y,
+        type: 'point',
+        color: 'red',
+        background: 'rgba(255, 0, 0, 0.4)',
+        text_position: 'none',
+        visible_zoom_level: 0, // Always show zombie markers at all zoom levels
+        layer: zombie.layer,
+        class_list: ['search-marker', 'search-zombie']
+    }));
+
+    // Load markers into the marker system
+    g.marker.load(zombieMarkers);
+
+    // Store references for cleanup in search markers system
+    if (!g.searchMarkers) {
+        g.searchMarkers = [];
+    }
+    const markerIds = zombieMarkers.map(m => m.id);
+    g.searchMarkers.push(...markerIds);
+
+    console.log(`Added ${zombieMarkers.length} zombie markers for ${zombieType}`);
 }
 
 /**
@@ -1011,6 +1179,14 @@ function togglePOIs() {
             setTimeout(() => {
                 handleItemSearchFromURL(g.pendingItemSearch);
                 g.pendingItemSearch = null;
+            }, 100);
+        }
+
+        // Process any pending zombie search when POIs are enabled
+        if (g.pendingZombieSearch) {
+            setTimeout(() => {
+                handleZombieSearchFromURL(g.pendingZombieSearch);
+                g.pendingZombieSearch = null;
             }, 100);
         }
     }
