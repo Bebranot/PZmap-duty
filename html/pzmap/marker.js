@@ -217,5 +217,37 @@ export class MarkManager {
         const s = JSON.stringify(data, null, '  ');
         util.download('marks.json', s);
     }
+
+    // Server-backed sync (public/faction/private marks). See app.py /api/marks.
+    async LoadFromServer() {
+        const resp = await window.fetch('/api/marks', { credentials: 'same-origin' });
+        if (!resp.ok) return [];
+        const rows = await resp.json();
+        const objs = rows.map((r) => r.mark);
+        this.load(objs);
+        return rows;
+    }
+
+    async SaveToServer(visibility = 'faction') {
+        const data = [];
+        for (const mark of this.db.all()) {
+            data.push(mark.toObject());
+        }
+        const resp = await window.fetch('/api/marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ marks: data, visibility }),
+        });
+        return resp.json();
+    }
+
+    async DeleteFromServer(id) {
+        const resp = await window.fetch('/api/marks/' + encodeURIComponent(id), {
+            method: 'DELETE',
+            credentials: 'same-origin',
+        });
+        return resp.json();
+    }
 }
 

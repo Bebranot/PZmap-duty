@@ -1,14 +1,14 @@
 pz_root: |- # project zomboid game folder
-    /home/debian/disk/ProjectZomboid
+    C:\Program Files (x86)\Steam\steamapps\common\ProjectZomboid
 
 output_path: |- # render output folder
-    /home/debian/disk/pzmap42_13
+    C:\Users\BebraYep\Desktop\Новая папка (7)\PZmap\output
 
 mod_root: |- # steam workshop folder for project zomboid
-    /home/debian/disk/ProjectZomboid
+    C:\Program Files (x86)\Steam\steamapps\workshop\content\108600
 
 custom_root: |- # custom file folder
-    /home/debian/disk/pzmap42_13/
+    C:\Users\BebraYep\Desktop\Новая папка (7)\PZmap\output\
 
 # for multi map set
 # output_entry: map set name
@@ -58,7 +58,7 @@ render_conf:
     # show profiling infomation
     profile: false
     # thread count
-    worker_count: 12
+    worker_count: 8
     # set hotkey to stop render (rerun render to resume)
     # hotkey examples:
     #     <ctrl>+<alt>+a    ctrl + alt + a
@@ -83,7 +83,7 @@ render_conf:
     #     layer_range: [-32, 32]
     # render all possible layers
     #     layer_range: all
-    layer_range: all
+    layer_range: [0, 1]
     # discard bottom levels to save space at the cost of zoom in resolution
     # you can customize this setting for each job by adding variables
     # in following format:
@@ -102,7 +102,7 @@ render_conf:
     #     omit_levels[Bedford Falls](zombie): 1
     #     omit_levels[Bedford Falls](zombie_top): 1
     #     omit_levels: 0
-    omit_levels: 0
+    omit_levels: 2
 
     # output image format, affect base and all overlay map, mush support transparent
     # supported formats: [png, webp]
