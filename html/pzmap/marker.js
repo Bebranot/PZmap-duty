@@ -8,6 +8,34 @@ import { MarkDatabase } from "./mark/memdb.js";
 import { MarkEditor, create } from "./mark/edit.js";
 import * as conf from "./mark/conf.js";
 
+const SERVER_FETCH_TIMEOUT_MS = 12000;
+
+// fetch() has no timeout by default — over a flaky/slow connection (e.g. the
+// public port-forward this now runs behind) a hung request just sits there
+// forever with no feedback, which reads exactly like "nothing saves". This
+// aborts after a fixed timeout and throws on any non-2xx response instead of
+// silently returning, so callers can actually react (roll back an optimistic
+// UI change, show an error) instead of pretending it worked.
+async function fetchJson(url, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SERVER_FETCH_TIMEOUT_MS);
+    try {
+        const resp = await window.fetch(url, { ...options, signal: controller.signal });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+            throw new Error(data.error || ('http_' + resp.status));
+        }
+        return data;
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            throw new Error('timeout');
+        }
+        throw e;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 export function updateZoom() {
     // update zoom information to current viewer
     const step = g.grid.step;
@@ -226,14 +254,30 @@ export class MarkManager {
     }
 
     // Server-backed sync (public/faction/private marks). See app.py /api/marks.
+    // All of these throw on failure/timeout instead of silently returning —
+    // callers (markers.js) must catch and react (roll back optimistic UI,
+    // surface an error) rather than assume it worked.
     async LoadFromServer() {
-        const resp = await window.fetch('/api/marks', { credentials: 'same-origin' });
-        if (!resp.ok) return [];
-        const rows = await resp.json();
+        const rows = await fetchJson('/api/marks', { credentials: 'same-origin' });
         // owner_user_id lives on the row wrapper, not inside geometry_json —
         // stitch it back onto the mark object so client-side delete-permission
         // checks (markers.js) have something to compare against.
         const objs = rows.map((r) => ({ ...r.mark, owner_user_id: r.owner_user_id }));
+
+        // This gets polled periodically for live sync (markers.js), so a mark
+        // that's no longer in the response (deleted by someone else, or fell
+        // out of your visibility scope) needs to disappear locally too —
+        // load()/batchInsert() only ever upserts, never prunes. Only touch
+        // marks that actually came from the server before (have an
+        // owner_user_id) so this never removes POIs/the locked-coordinate
+        // pin/room-object overlays that share this same MarkManager.
+        const seenIds = new Set(objs.map((o) => o.id));
+        for (const mark of this.db.all()) {
+            if (mark.owner_user_id !== undefined && mark.owner_user_id !== null && !seenIds.has(mark.id)) {
+                this.remove(mark.id);
+            }
+        }
+
         this.load(objs);
         return rows;
     }
@@ -243,34 +287,31 @@ export class MarkManager {
         for (const mark of this.db.all()) {
             data.push(mark.toObject());
         }
-        const resp = await window.fetch('/api/marks', {
+        return fetchJson('/api/marks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
             body: JSON.stringify({ marks: data, visibility }),
         });
-        return resp.json();
     }
 
     // Save a single mark object without touching the visibility of every other
     // already-loaded mark (SaveToServer() re-saves the whole db.all() batch under
     // one visibility, which would silently overwrite unrelated marks' visibility).
     async SaveOneToServer(obj, visibility = 'faction') {
-        const resp = await window.fetch('/api/marks', {
+        return fetchJson('/api/marks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
             body: JSON.stringify({ marks: [obj], visibility }),
         });
-        return resp.json();
     }
 
     async DeleteFromServer(id) {
-        const resp = await window.fetch('/api/marks/' + encodeURIComponent(id), {
+        return fetchJson('/api/marks/' + encodeURIComponent(id), {
             method: 'DELETE',
             credentials: 'same-origin',
         });
-        return resp.json();
     }
 }
 

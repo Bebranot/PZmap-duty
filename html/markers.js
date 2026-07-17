@@ -28,6 +28,7 @@
     const DOT_COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#e67e22', '#7f8c8d', '#2ecc71', '#f1c40f', '#1abc9c'];
 
     const DELETE_RADIUS_SQUARES = 3; // click tolerance when picking a mark to delete
+    const MARKS_LIVE_REFRESH_MS = 5000; // periodic re-fetch so other players' marks show up
 
     let placing = false;
     let deleting = false;
@@ -154,7 +155,16 @@
             owner_user_id: window.PZMAP_USER ? window.PZMAP_USER.id : undefined,
         };
         g.marker.load([obj]);
-        await g.marker.SaveOneToServer(obj, window.PZMAP_SCOPE || 'faction');
+        try {
+            await g.marker.SaveOneToServer(obj, window.PZMAP_SCOPE || 'faction');
+        } catch (e) {
+            // the optimistic local render above already happened — undo it,
+            // otherwise the mark would look placed on screen while the
+            // server never actually got it (exactly what "не сохраняется"
+            // looks like from the user's side)
+            g.marker.remove(obj.id);
+            showWarning('Не удалось сохранить метку: ' + e.message);
+        }
     }
 
     function showWarning(msg) {
@@ -204,12 +214,12 @@
             showWarning('Рядом нет твоей метки для удаления');
             return;
         }
-        const result = await g.marker.DeleteFromServer(mark.id);
-        if (result && result.error) {
-            showWarning('Не удалось удалить: ' + result.error);
-            return;
+        try {
+            await g.marker.DeleteFromServer(mark.id);
+            g.marker.remove(mark.id);
+        } catch (e) {
+            showWarning('Не удалось удалить: ' + e.message);
         }
-        g.marker.remove(mark.id);
     }
 
     function setPlacing(g, on) {
@@ -264,6 +274,14 @@
         nameInput.addEventListener('keydown', (e) => {
             e.stopPropagation();
         });
+
+        // Live sync: re-pull marks periodically so ones placed by other
+        // players show up without needing a page refresh. Not skipped while
+        // placing/deleting since it only adds/updates marks by id — it won't
+        // clobber the in-progress panel state.
+        setInterval(() => {
+            g.marker.LoadFromServer().catch(() => {});
+        }, MARKS_LIVE_REFRESH_MS);
     }
 
     document.addEventListener('pzmap-authenticated', () => { init(); });

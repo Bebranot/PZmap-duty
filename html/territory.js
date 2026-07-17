@@ -6,6 +6,30 @@
 
     const MAX_BOX_CELLS = 44;   // max 44x44 = 1936 cells per box-select
     const BATCH_SIZE = 2000;    // API limit per request
+    const FETCH_TIMEOUT_MS = 12000;
+    const LIVE_REFRESH_MS = 4000; // periodic re-fetch so other players' paints show up without panning
+
+    // fetch() has no timeout by default, and a plain `await fetch(...)` with
+    // no .ok check "succeeds" from the caller's point of view even on a 500
+    // or a network drop — over the public port-forward this now runs behind,
+    // that meant a failed save looked exactly like a successful one (the
+    // optimistic local paint stayed on screen either way). This throws on
+    // timeout/non-2xx so callers can roll back and tell the user it failed.
+    async function fetchJson(url, options = {}) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        try {
+            const resp = await fetch(url, { ...options, signal: controller.signal });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw new Error(data.error || ('http_' + resp.status));
+            return data;
+        } catch (e) {
+            if (e.name === 'AbortError') throw new Error('timeout');
+            throw e;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
 
     // Preset color palette — keep in sync with TERRITORY_PALETTE in app.py.
     // Deliberately not a free color picker: territory colors are a curated
@@ -235,11 +259,26 @@
         }
         const layer = g.currentLayer;
         const qs = new URLSearchParams({ layer, x0: bbox.x0, y0: bbox.y0, x1: bbox.x1, y1: bbox.y1 });
-        const resp = await fetch('/api/territory?' + qs.toString(), { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        const rows = await resp.json();
+        let rows;
+        try {
+            rows = await fetchJson('/api/territory?' + qs.toString(), { credentials: 'same-origin' });
+        } catch (e) {
+            return; // transient — the next scheduled/live-refresh load will retry
+        }
+        // This gets polled periodically for live sync (see the setInterval in
+        // init()), so a square that used to be in this bbox but no longer
+        // comes back (erased by someone else) needs to disappear locally too
+        // — otherwise it'd sit there painted on your screen until you pan
+        // away and back. Walk the already-loaded squares that fall inside
+        // this bbox (bounded by how many squares are actually painted, which
+        // is normally small) rather than every x/y cell in the bbox itself
+        // (which could be up to MAX_BBOX_SQUARES — far too many to loop every
+        // few seconds).
+        const seen = new Set();
         for (const row of rows) {
-            squares.set(key(layer, row.sq_x, row.sq_y), {
+            const k = key(layer, row.sq_x, row.sq_y);
+            seen.add(k);
+            squares.set(k, {
                 faction_id: row.faction_id,
                 painted_by_user_id: row.painted_by_user_id,
                 color: row.color,
@@ -247,6 +286,13 @@
                 painted_at: row.painted_at || '',
                 paint_type: row.paint_type || '',
             });
+        }
+        for (const k of squares.keys()) {
+            if (seen.has(k)) continue;
+            const [l, x, y] = k.split(':').map(Number);
+            if (l === layer && x >= bbox.x0 && x <= bbox.x1 && y >= bbox.y0 && y <= bbox.y1) {
+                squares.delete(k);
+            }
         }
         redraw(g, viewer, c);
     }
@@ -273,7 +319,7 @@
     async function sendBatch(layer, cells, erase) {
         for (let i = 0; i < cells.length; i += BATCH_SIZE) {
             const batch = cells.slice(i, i + BATCH_SIZE);
-            await fetch('/api/territory/paint', {
+            await fetchJson('/api/territory/paint', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',
@@ -293,10 +339,10 @@
             body.visibility = window.PZMAP_SCOPE || 'faction';
         }
 
+        const previous = squares.get(k); // for rollback if the save fails
         if (erasing) {
-            const sq = squares.get(k);
-            if (!canErase(sq)) {
-                if (sq) showBoxWarning('Это не твоя клетка');
+            if (!canErase(previous)) {
+                if (previous) showBoxWarning('Это не твоя клетка');
                 return;
             }
             squares.delete(k);
@@ -310,12 +356,19 @@
                 paint_type: currentPaintType,
             });
         }
-        await fetch('/api/territory/paint', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ layer, squares: [body], erase: erasing }),
-        });
+        try {
+            await fetchJson('/api/territory/paint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ layer, squares: [body], erase: erasing }),
+            });
+        } catch (e) {
+            // roll back the optimistic change above — otherwise a failed
+            // save still looks painted/erased on screen
+            if (previous) squares.set(k, previous); else squares.delete(k);
+            showBoxWarning('Не сохранилось: ' + e.message);
+        }
     }
 
     function cellsInBox(x0, y0, x1, y1) {
@@ -344,12 +397,14 @@
         const myColor = currentPaintColor || window.PZMAP_USER.faction_color;
         const allCells = cellsInBox(x0, y0, x1, y1);
         const toPaint = [];
+        const previousByKey = new Map(); // for rollback if the batch save fails
 
         for (const cell of allCells) {
             const k = key(layer, cell.x, cell.y);
             if (erasing) {
                 const sq = squares.get(k);
                 if (sq && canErase(sq)) {
+                    previousByKey.set(k, sq);
                     squares.delete(k);
                     toPaint.push({ x: cell.x, y: cell.y });
                 }
@@ -358,6 +413,7 @@
             } else {
                 const sq = squares.get(k);
                 if (sq && sq.color === myColor) continue;
+                previousByKey.set(k, sq); // may be undefined — a brand new square
                 squares.set(k, {
                     faction_id: window.PZMAP_USER.faction_id,
                     painted_by_user_id: window.PZMAP_USER.id,
@@ -374,7 +430,14 @@
         }
 
         if (toPaint.length) {
-            await sendBatch(layer, toPaint, erasing);
+            try {
+                await sendBatch(layer, toPaint, erasing);
+            } catch (e) {
+                for (const [k, prev] of previousByKey) {
+                    if (prev) squares.set(k, prev); else squares.delete(k);
+                }
+                showBoxWarning('Не сохранилось: ' + e.message);
+            }
         }
         redraw(g, window.g.viewer, c);
     }
@@ -681,6 +744,15 @@
         mapDiv.addEventListener('mouseleave', () => { hideTooltip(); });
 
         scheduleLoad(g, viewer, c);
+
+        // Live sync: without this, another player's paint only shows up once
+        // *you* pan/zoom (which is what triggers loadVisible via
+        // update-viewport). Poll the currently-visible area on a timer too,
+        // so changes from other people appear without any action on your end.
+        // Skipped mid-drag so it can't stomp an in-progress box-select preview.
+        setInterval(() => {
+            if (!isDragging) loadVisible(g, viewer, c);
+        }, LIVE_REFRESH_MS);
     }
 
     document.addEventListener('pzmap-authenticated', () => { init(); });
