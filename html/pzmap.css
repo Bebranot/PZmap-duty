@@ -966,25 +966,6 @@ svg circle { fill: #39f; stroke: #33f; }
     color: #fff;
 }
 
-.mk-color-input {
-    width: 36px;
-    height: 28px;
-    padding: 1px;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background: #2a2a30;
-    cursor: pointer;
-}
-
-.mk-color-input::-webkit-color-swatch-wrapper {
-    padding: 2px;
-}
-
-.mk-color-input::-webkit-color-swatch {
-    border: none;
-    border-radius: 3px;
-}
-
 .mk-name-input {
     width: 100%;
     padding: 7px 10px;

@@ -20,11 +20,18 @@
         { label: 'L', value: 43 },
     ];
 
+    // Preset swatches instead of a free color picker (<input type="color">
+    // was unreliable across browsers and the user asked for presets anyway).
+    // Text color: readable-on-map tones. Dot color: same palette as
+    // territory painting (see PALETTE in territory.js) for a consistent look.
+    const TEXT_COLORS = ['#ffffff', '#000000', '#f1c40f', '#e74c3c', '#2ecc71', '#3498db'];
+    const DOT_COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#e67e22', '#7f8c8d', '#2ecc71', '#f1c40f', '#1abc9c'];
+
     let placing = false;
     let selectedIcon = null;
     let selectedSize = 32;
-    let textColor = '#ffffff';
-    let dotColor = '#3399ff';
+    let textColor = TEXT_COLORS[0];
+    let dotColor = DOT_COLORS[0];
     let panel = null;
     let nameInput = null;
     let sizeButtons = [];
@@ -46,6 +53,15 @@
       <button class="mk-size-btn${i === 1 ? ' active' : ''}" data-size="${s.value}">${s.label}</button>
     `).join('');
 
+        const textSwatches = TEXT_COLORS.map((color, i) => `
+      <button class="tp-swatch${i === 0 ? ' active' : ''}" data-color="${color}"
+              style="background:${color}; ${color === '#ffffff' ? 'border:2px solid #666;' : ''}" title="${color}"></button>
+    `).join('');
+
+        const dotSwatches = DOT_COLORS.map((color, i) => `
+      <button class="tp-swatch${i === 0 ? ' active' : ''}" data-color="${color}" style="background:${color};" title="${color}"></button>
+    `).join('');
+
         panel = el(`
       <div id="marker-panel" class="floating-panel">
         <div class="mk-header">Создание метки</div>
@@ -62,16 +78,12 @@
 
         <div class="mk-section">
           <div class="mk-label">Цвет текста</div>
-          <div class="mk-row">
-            <input type="color" id="mk-text-color" value="#ffffff" class="mk-color-input">
-          </div>
+          <div class="tp-palette" id="mk-text-color-palette">${textSwatches}</div>
         </div>
 
         <div class="mk-section">
-          <div class="mk-label">Цвет точек</div>
-          <div class="mk-row">
-            <input type="color" id="mk-dot-color" value="#3399ff" class="mk-color-input">
-          </div>
+          <div class="mk-label">Цвет точки</div>
+          <div class="tp-palette" id="mk-dot-color-palette">${dotSwatches}</div>
         </div>
 
         <div class="mk-section">
@@ -101,11 +113,21 @@
             });
         });
 
-        const textClr = panel.querySelector('#mk-text-color');
-        textClr.addEventListener('input', () => { textColor = textClr.value; });
+        panel.querySelectorAll('#mk-text-color-palette .tp-swatch').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                panel.querySelectorAll('#mk-text-color-palette .tp-swatch').forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                textColor = btn.dataset.color;
+            });
+        });
 
-        const dotClr = panel.querySelector('#mk-dot-color');
-        dotClr.addEventListener('input', () => { dotColor = dotClr.value; });
+        panel.querySelectorAll('#mk-dot-color-palette .tp-swatch').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                panel.querySelectorAll('#mk-dot-color-palette .tp-swatch').forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                dotColor = btn.dataset.color;
+            });
+        });
 
         nameInput = panel.querySelector('#mk-name-input');
     }

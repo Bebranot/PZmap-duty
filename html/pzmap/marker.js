@@ -129,6 +129,13 @@ export class MarkManager {
     redrawAll() {
         if (!this.enabled) return;
         const range = g.range;
+        // g.range is only populated after the viewer's first 'update-viewport'
+        // fires. If a mark gets added (e.g. markers.js placing one right after
+        // page load, before the user has panned/zoomed) before that happens,
+        // range is still undefined and db.query()/RTreeIndex.query() throws
+        // trying to call range.getBound(). Bail out quietly — the next real
+        // viewport update triggers its own redrawAll() with a valid range.
+        if (!range) return;
         const result = this.db.query(range, g.currentLayer, g.zoomLevel);
         const marks = [];
         if (this.edit) {
