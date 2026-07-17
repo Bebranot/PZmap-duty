@@ -335,12 +335,16 @@ div.iso-only-btn { display: inline-block; }
 div.passthrough { pointer-events: none; }
 div.interactive { pointer-events: auto; }
 div.mark { border-style: solid; }
-div.text { 
-    white-space: nowrap; 
-    text-shadow: 2px 0 #fff, -2px 0 #fff, 0 2px #fff, 0 -2px #fff, 
+div.text {
+    white-space: nowrap;
+    text-shadow: 2px 0 #fff, -2px 0 #fff, 0 2px #fff, 0 -2px #fff,
                  1px 1px #fff, -1px -1px #fff, 1px -1px #fff, -1px 1px #fff;
-    color: #33f; 
-    font-family: Arial, sans-serif; 
+    color: #33f;
+    font-family: Arial, sans-serif;
+    /* fades out fully when zoomed way out — steeper than the icon fade
+       above, since labels are what actually clutter the view */
+    opacity: var(--pz-text-opacity, 1);
+    transition: opacity 0.25s ease;
 }
 div.text.light { 
     white-space: nowrap; 
@@ -369,13 +373,18 @@ div.area.selected { background-color: rgba(255,255,50,0.3); border-color: #ff3; 
 div.area.selected-rect { background-color: rgba(255,255,192,0.3); border-color: #ffc; }
 div.area.iso.cursor { background-color: rgba(255,255,255,0); border-color: #0f0; border-width: 2px; }
 div.area.top.cursor { background-color: rgba(255,255,255,0); border-color: #0f0; border-width: 1px; }
-div.point { 
-    border-radius: 50%; 
-    border-width: 2px; 
-    width: 10px; 
+div.point {
+    border-radius: 50%;
+    border-width: 2px;
+    width: 10px;
     height: 10px;
-    background-color: #39f; 
-    border-color: #33f; 
+    background-color: #39f;
+    border-color: #33f;
+    /* zoomed-way-out fade, driven by zoom-fade.js; falls back to fully
+       visible if that script hasn't set the custom properties yet */
+    transform: scale(var(--pz-icon-scale, 1));
+    opacity: var(--pz-icon-opacity, 1);
+    transition: transform 0.25s ease, opacity 0.25s ease;
 }
 div.point.text { padding-top: 5px; }
 div.point.above { background-color: #9f3; border-color: #383; }

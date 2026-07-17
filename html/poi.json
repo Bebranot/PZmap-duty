@@ -54,45 +54,6 @@
         ]
     },
     {
-        "ID": "3004",
-        "name": "Irvington",
-        "description": "",
-        "x": 2498,
-        "y": 14253,
-        "Importance": 1,
-        "location": "Irvington",
-        "tags": [
-            "town",
-            "city"
-        ]
-    },
-    {
-        "ID": "3005",
-        "name": "Echo Creek",
-        "description": "",
-        "x": 3518,
-        "y": 10926,
-        "Importance": 1,
-        "location": "Echo Creek",
-        "tags": [
-            "town",
-            "spawn"
-        ]
-    },
-    {
-        "ID": "3006",
-        "name": "Brandenburg",
-        "description": "",
-        "x": 2101,
-        "y": 6076,
-        "Importance": 1,
-        "location": "Brandenburg",
-        "tags": [
-            "town",
-            "city"
-        ]
-    },
-    {
         "ID": "3007",
         "name": "Riverside",
         "description": "",
@@ -236,7 +197,10 @@
         "x": 11668,
         "y": 8302,
         "location": "Dixie",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1008",
@@ -412,7 +376,7 @@
     {
         "ID": "1027",
         "name": "Farm Produce Shop",
-        "description": "With adjoining caf\u00c3\u00a9s.",
+        "description": "With adjoining cafÃ©s.",
         "x": 5465,
         "y": 9584,
         "location": "Doe Valley",
@@ -1658,7 +1622,9 @@
         "x": 13580,
         "y": 1701,
         "location": "Louisville",
-        "tags": ["Office"]
+        "tags": [
+            "Office"
+        ]
     },
     {
         "ID": "1167",
@@ -1667,7 +1633,11 @@
         "x": 13689,
         "y": 1779,
         "location": "Louisville",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1168",
@@ -1676,7 +1646,11 @@
         "x": 12363,
         "y": 1760,
         "location": "Louisville",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1169",
@@ -1685,7 +1659,11 @@
         "x": 13943,
         "y": 3047,
         "location": "Louisville",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1170",
@@ -3188,7 +3166,10 @@
         "x": 12448,
         "y": 3786,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1337",
@@ -3197,7 +3178,10 @@
         "x": 13457,
         "y": 2927,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1338",
@@ -3206,7 +3190,10 @@
         "x": 13661,
         "y": 1321,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1339",
@@ -3215,7 +3202,10 @@
         "x": 12314,
         "y": 1930,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1340",
@@ -3224,7 +3214,10 @@
         "x": 13303,
         "y": 1351,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1341",
@@ -3242,7 +3235,11 @@
         "x": 12714,
         "y": 1621,
         "location": "Louisville",
-        "tags": ["Spiffo", "Restaurant", "Headquaters"]
+        "tags": [
+            "Spiffo",
+            "Restaurant",
+            "Headquaters"
+        ]
     },
     {
         "ID": "1343",
@@ -4484,7 +4481,10 @@
         "x": 10621,
         "y": 9650,
         "location": "Muldraugh",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1481",
@@ -5132,7 +5132,10 @@
         "x": 6123,
         "y": 5305,
         "location": "Riverside",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1553",
@@ -5339,7 +5342,11 @@
         "x": 8138,
         "y": 11741,
         "location": "Rosewood",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1576",
@@ -5528,7 +5535,10 @@
         "x": 8074,
         "y": 11343,
         "location": "Rosewood",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1597",
@@ -6419,7 +6429,10 @@
         "x": 11976,
         "y": 6810,
         "location": "West Point",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1696",
@@ -6698,7 +6711,10 @@
         "name": "Spiffo's",
         "description": "",
         "location": "Irvington",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1727",
@@ -6914,7 +6930,11 @@
         "name": "Fire Department",
         "description": "",
         "location": "Ekron",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1751",
@@ -7112,7 +7132,10 @@
         "name": "Spiffo's",
         "description": "",
         "location": "Brandenburg",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1773",
@@ -7157,7 +7180,10 @@
         "name": "Spiffo's",
         "description": "",
         "location": "Brandenburg",
-        "tags": ["Spiffo", "Restaurant"]
+        "tags": [
+            "Spiffo",
+            "Restaurant"
+        ]
     },
     {
         "ID": "1778",
@@ -7184,7 +7210,11 @@
         "name": "Fire Department",
         "description": "",
         "location": "Brandenburg",
-        "tags": ["Fire", "Fire axe", "Fire station"]
+        "tags": [
+            "Fire",
+            "Fire axe",
+            "Fire station"
+        ]
     },
     {
         "ID": "1781",
@@ -7508,7 +7538,13 @@
         "name": "Ovo Farms",
         "description": "Chicken farm with a warehouse, factory, and manor",
         "location": "Echo creek",
-        "tags": ["farm", "warehouse", "factory", "manor", "chicken"]
+        "tags": [
+            "farm",
+            "warehouse",
+            "factory",
+            "manor",
+            "chicken"
+        ]
     },
     {
         "ID": "1816",
@@ -7517,7 +7553,12 @@
         "name": "Meadshire Estate",
         "description": "Gated community with a single entrance",
         "location": "Doe Valley",
-        "tags": ["residential", "gated", "community", "estate"]
+        "tags": [
+            "residential",
+            "gated",
+            "community",
+            "estate"
+        ]
     },
     {
         "ID": "1817",
@@ -7526,16 +7567,11 @@
         "name": "Mad Dan's Den",
         "description": "Home appliances and furniture store",
         "location": "Doe Valley",
-        "tags": ["store", "furniture", "appliances"]
-    },
-    {
-        "ID": "1818",
-        "x": 3529,
-        "y": 8262,
-        "name": "Historic Coalfield",
-        "description": "Western themed town with blacksmith, saloon, hardware store, and more",
-        "location": "Doe Valley",
-        "tags": ["western", "blacksmith", "saloon", "hardware", "town"]
+        "tags": [
+            "store",
+            "furniture",
+            "appliances"
+        ]
     },
     {
         "ID": "1819",
@@ -7544,7 +7580,17 @@
         "name": "Boarding School",
         "description": "Fenced off location with bunkrooms, classrooms, a cafeteria, offices, a clinic, greenhouse/botanical garden, and a courtyard",
         "location": "Doe Valley",
-        "tags": ["school", "fenced", "bunkrooms", "classrooms", "cafeteria", "offices", "clinic", "greenhouse", "courtyard"]
+        "tags": [
+            "school",
+            "fenced",
+            "bunkrooms",
+            "classrooms",
+            "cafeteria",
+            "offices",
+            "clinic",
+            "greenhouse",
+            "courtyard"
+        ]
     },
     {
         "ID": "1820",
@@ -7553,7 +7599,14 @@
         "name": "Private Retreat",
         "description": "Fenced off lakehouse with a barn. Isolated and enclosed. Great base location",
         "location": "Doe Valley",
-        "tags": ["retreat", "fenced", "lakehouse", "barn", "isolated", "base"]
+        "tags": [
+            "retreat",
+            "fenced",
+            "lakehouse",
+            "barn",
+            "isolated",
+            "base"
+        ]
     },
     {
         "ID": "1821",
@@ -7562,7 +7615,12 @@
         "name": "Gardening Store",
         "description": "Sells seeds and gardening supplies",
         "location": "Echo creek",
-        "tags": ["store", "gardening", "seeds", "supplies"]
+        "tags": [
+            "store",
+            "gardening",
+            "seeds",
+            "supplies"
+        ]
     },
     {
         "ID": "1822",
@@ -7571,7 +7629,14 @@
         "name": "Cabin in the Woods",
         "description": "Has a stove, sink, an outhouse, and a shed",
         "location": "Doe Valley",
-        "tags": ["cabin", "woods", "stove", "sink", "outhouse", "shed"]
+        "tags": [
+            "cabin",
+            "woods",
+            "stove",
+            "sink",
+            "outhouse",
+            "shed"
+        ]
     },
     {
         "ID": "1823",

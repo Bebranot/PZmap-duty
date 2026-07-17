@@ -1061,21 +1061,6 @@ function onLayerSelect() {
     g.marker.redrawAll();
 }
 
-// roof opacity
-function updateRoofOpacity() {
-    const slider = document.getElementById('roof_opacity_slider');
-    const label = document.querySelector('.slider-label');
-    g.roof_opacity = slider.value;
-    slider.title = i18n.E('RoofOpacity');
-    if (label) {
-        label.textContent = `Roof Layer Opacity: ${slider.value}%`;
-    }
-    updateMaps(g.currentLayer);
-}
-
-
-
-
 function updateClip() {
     g.base_map.setClipByOtherMaps(g.mod_maps, g.currentLayer);
     for (let i = 0; i < g.mod_maps.length; i++) {

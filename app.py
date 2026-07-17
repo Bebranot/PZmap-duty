@@ -357,11 +357,20 @@ def paint_territory():
 
 # ---- map tile proxy (from proxy_server.py) ----
 
+# Tile/icon content at a given URL never changes once generated — cache it
+# hard so repeat visits (the whole point of a 10-person friend group hitting
+# the same map) don't re-fetch or even re-validate every file on every load.
+# Everything else (JS/CSS/HTML) stays uncached: this project is still being
+# actively iterated, and a long cache there would mean a bug fix silently
+# doesn't reach someone who already opened the page once.
+LONG_CACHE_SECONDS = 30 * 24 * 60 * 60  # 30 days
+
+
 @app.route('/map_data/<path:subpath>')
 def map_data(subpath):
     local_path = os.path.join(CACHE_ROOT, subpath)
     if os.path.isfile(local_path):
-        return send_from_directory(CACHE_ROOT, subpath)
+        return send_from_directory(CACHE_ROOT, subpath, max_age=LONG_CACHE_SECONDS)
 
     resp = requests.get(UPSTREAM + subpath, headers=TILE_HEADERS, timeout=30)
     if resp.status_code != 200:
@@ -370,7 +379,10 @@ def map_data(subpath):
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
     with open(local_path, 'wb') as f:
         f.write(resp.content)
-    return Response(resp.content, mimetype=resp.headers.get('Content-Type', 'application/octet-stream'))
+    response = Response(resp.content, mimetype=resp.headers.get('Content-Type', 'application/octet-stream'))
+    response.cache_control.public = True
+    response.cache_control.max_age = LONG_CACHE_SECONDS
+    return response
 
 
 # ---- static files ----
@@ -378,6 +390,8 @@ def map_data(subpath):
 @app.route('/', defaults={'path': 'pzmap.html'})
 @app.route('/<path:path>')
 def static_files(path):
+    if path.startswith('pzmap/icons/'):
+        return send_from_directory(HTML_ROOT, path, max_age=LONG_CACHE_SECONDS)
     return send_from_directory(HTML_ROOT, path)
 
 

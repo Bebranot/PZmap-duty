@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title id="page_title"></title>
+    <title id="page_title">Faction Duty</title>
     <link rel="icon" href="map.png">
     <script type="text/javascript" src="openseadragon/openseadragon.js"></script>
     <meta name="viewport" content="initial-scale=1.0">
@@ -14,7 +14,7 @@
       <div id="sidebar-container">
         <!-- Sidebar -->
         <div id="sidebar">
-          <div class="sidebar-header">B42 Map</div>
+          <div class="sidebar-header">Faction Duty</div>
           
           <!-- View Toggle -->
           <div id="top_view_link">
@@ -25,9 +25,6 @@
           <!-- Layer Controls -->
           <div id="sidebar-controls">
         <select id="layer_selector" onchange="onLayerSelect()"></select>
-            <label for="roof_opacity_slider" class="slider-label">Roof Layer Opacity: 0%</label>
-            <input id="roof_opacity_slider" type="range" min="0" max="100" value="0" step="10"
-                   class="iso-only-btn modern-slider" oninput="updateRoofOpacity()" title="Roof Layer Opacity">
             <div id="mouse-coordinates" style="text-align: center; font-size: 14px; color: lightgray;">
               X: 0, Y: 0
         </div>
@@ -92,14 +89,9 @@
           <!-- Footer Section -->
           <div class="divider"></div>
           <div id="footer_text">
-            <strong>VIEWER 2.0<br></strong><br>
-            <strong>Created with:</strong><br>
-            <a href="https://github.com/cff29546/pzmap2dzi" target="_blank">PZmap2dzi</a><br><br>
-            <strong>Map engine:</strong><br>
-            <a href="https://github.com/openseadragon/openseadragon/" target="_blank">OpenSeaDragon</a><br><br>
-            <strong>Created by:</strong><br>
-            <a href="https://pzwiki.net/wiki/Project_Zomboid_Wiki" target="_blank">PZwiki Volunteers</a>
-            <br><p>Last updated:<br>Build 42.13.2</p>
+            <strong>Discord:</strong> Bebranotyep<br>
+            Фракционный локальный сервер
+            <div id="pzmap-version" style="margin-top:10px; font-size:11px; color:#777;">v0.1-alpha</div>
           </div>
         </div>
       </div>
@@ -130,7 +122,7 @@
     <div id="help-popup-overlay" class="popup-overlay" onclick="hideHelpPopup()">
       <div id="help-popup" class="help-popup" onclick="event.stopPropagation()">
         <div class="help-popup-header">
-          <h2>B42 Map Help</h2>
+          <h2>Faction Duty — Help</h2>
           <button class="help-close-btn" onclick="hideHelpPopup()">×</button>
         </div>
         <div class="help-popup-content">
@@ -199,5 +191,6 @@
     <script type="text/javascript" src="pzmap.js"></script>
     <script type="text/javascript" src="territory.js"></script>
     <script type="text/javascript" src="markers.js"></script>
+    <script type="text/javascript" src="zoom-fade.js"></script>
   </body>
 </html>
