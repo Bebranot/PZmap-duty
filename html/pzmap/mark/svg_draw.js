@@ -157,16 +157,32 @@ function text(id, mark, part) {
     g.svg.top.appendChild(e);
 }
 
+const ICON_PX_SIZE = 24; // on-screen pixel size for marker icons, independent of zoom
+
 function point(id, mark, part) {
     const { x, y } = part;
-    const { color, background } = mark;
+    const { color, background, icon } = mark;
     const layer = mark.layer || 0;
-    const attrs = { cx: x + 0.5, cy: y + 0.5 };
+    let cx = x + 0.5;
+    let cy = y + 0.5;
     if (g.map_type === 'iso') {
-        attrs.cx = (x - y) / 2;
-        attrs.cy = (x + y + 1 - layer * 6) / 4;
+        cx = (x - y) / 2;
+        cy = (x + y + 1 - layer * 6) / 4;
     }
-    const e = newSVGElement('circle', id, attrs);
+
+    if (icon) {
+        const step = (g.grid && g.grid.step) || 1;
+        const size = ICON_PX_SIZE / step;
+        const e = newSVGElement('image', id, {
+            x: cx - size / 2, y: cy - size / 2, width: size, height: size,
+        });
+        e.setAttributeNS('http://www.w3.org/1999/xlink', 'href', './pzmap/icons/' + icon + '.png');
+        e.setAttribute('href', './pzmap/icons/' + icon + '.png');
+        g.svg.top.appendChild(e);
+        return;
+    }
+
+    const e = newSVGElement('circle', id, { cx, cy });
     g.svg.top.appendChild(e);
     if (color) e.style.stroke = color;
     if (background) e.style.fill = background;

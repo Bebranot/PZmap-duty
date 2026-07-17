@@ -183,11 +183,20 @@ function point(id, mark, part) {
     setClass(element, mark, part);
     element.style.display = 'block';
     element.title = mark.name || '';
-    if (mark.color) {
-        element.style['border-color'] = mark.color;
-    }
-    if (mark.background) {
-        element.style['background-color'] = mark.background;
+    if (mark.icon) {
+        element.style.border = 'none';
+        element.style['background-color'] = 'transparent';
+        element.style['background-image'] = `url('./pzmap/icons/${mark.icon}.png')`;
+        element.style['background-size'] = 'contain';
+        element.style['background-repeat'] = 'no-repeat';
+        element.style['background-position'] = 'center';
+    } else {
+        if (mark.color) {
+            element.style['border-color'] = mark.color;
+        }
+        if (mark.background) {
+            element.style['background-color'] = mark.background;
+        }
     }
 }
 

@@ -137,10 +137,11 @@ class Mark {
 
     toRenderFormat(options = {}) {
         return {
-            id: this.id, 
+            id: this.id,
             type: this.constructor.name.toLowerCase(),
             color: this.color ? this.color : null,
             background: this.background ? this.background : null,
+            icon: this.icon ? this.icon : null,
             name: this.name,
             layer: this.layer,
             hash: this.hash(options),
@@ -222,7 +223,7 @@ class Point extends Mark {
             && Number.isInteger(obj.y))
     }
 
-    constructor(obj) { super(obj, ['x', 'y', 'layer']); }
+    constructor(obj) { super(obj, ['x', 'y', 'layer', 'icon']); }
 
     start_drag(x, y) {
         this.sx = this.x;
