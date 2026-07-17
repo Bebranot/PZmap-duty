@@ -8,3 +8,4 @@ test_output/
 data/
 .codegraph/
 cloudflared.exe
+AGENTS.md
