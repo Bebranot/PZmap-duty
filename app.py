@@ -339,4 +339,8 @@ def static_files(path):
 if __name__ == '__main__':
     from waitress import serve
     print('Serving on http://localhost:8880/pzmap.html')
-    serve(app, host='0.0.0.0', port=8880)
+    # waitress defaults to 4 worker threads, which starves API requests
+    # (register/paint/marks) behind the flood of concurrent tile/icon GETs
+    # every pan/zoom triggers — everything queues up and looks like saving
+    # is broken when it's actually just stuck behind slow tile fetches.
+    serve(app, host='0.0.0.0', port=8880, threads=32)

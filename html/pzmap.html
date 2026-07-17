@@ -187,7 +187,12 @@
           factionTab.addEventListener('click', () => setScope('faction'));
           publicTab.addEventListener('click', () => setScope('public'));
       }
-      document.addEventListener('DOMContentLoaded', initScopeToggle);
+      // Called directly, not on DOMContentLoaded: this script tag sits after
+      // the sidebar markup in the document, so by the time it runs the
+      // elements already exist — but DOMContentLoaded itself has often
+      // already fired by then too, which would mean the listener below
+      // never runs and the toggle silently has no click handlers.
+      initScopeToggle();
     </script>
     <script type="text/javascript" src="auth.js"></script>
     <script type="text/javascript" src="pzmap.js"></script>
