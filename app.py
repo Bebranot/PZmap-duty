@@ -1,7 +1,9 @@
 import os
 import re
 import json
+import time
 import requests
+from collections import defaultdict
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, Response, request, session, jsonify, send_from_directory, abort
@@ -19,8 +21,47 @@ TILE_HEADERS = {'User-Agent': 'Mozilla/5.0'}
 USERNAME_RE = re.compile(r'^[A-Za-z0-9_\-]{3,32}$')
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key or secret_key == 'change-me-to-a-random-string':
+    raise RuntimeError(
+        'SECRET_KEY is missing or still the placeholder value in .env — '
+        'generate a real one (e.g. `python -c "import secrets; print(secrets.token_hex(32))"`) '
+        'before running this publicly. A predictable secret lets anyone forge a session cookie.'
+    )
+app.secret_key = secret_key
 init_db()
+
+
+# ---- rate limiting (simple in-memory sliding window; fine for a single
+# waitress process serving a handful of real users — not meant to survive
+# a restart or scale past one process) ----
+
+RATE_LIMIT_WINDOW_SECONDS = 600
+RATE_LIMIT_MAX_ATTEMPTS = 8
+_rate_limit_hits = defaultdict(list)
+
+
+def rate_limited(bucket):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            key = (bucket, request.remote_addr)
+            now = time.time()
+            hits = _rate_limit_hits[key]
+            hits[:] = [t for t in hits if now - t < RATE_LIMIT_WINDOW_SECONDS]
+            if len(hits) >= RATE_LIMIT_MAX_ATTEMPTS:
+                return jsonify({'error': 'rate_limited'}), 429
+            hits.append(now)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+@app.after_request
+def add_security_headers(resp):
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['X-Frame-Options'] = 'DENY'
+    return resp
 
 
 # ---- auth helpers ----
@@ -50,6 +91,7 @@ def list_factions():
 
 
 @app.route('/api/auth/register', methods=['POST'])
+@rate_limited('register')
 def register():
     data = request.get_json(force=True, silent=True) or {}
     username = (data.get('username') or '').strip()
@@ -88,6 +130,7 @@ def register():
 
 
 @app.route('/api/auth/login', methods=['POST'])
+@rate_limited('login')
 def login():
     data = request.get_json(force=True, silent=True) or {}
     username = (data.get('username') or '').strip()
