@@ -163,11 +163,16 @@
     }
 
     async function init() {
-        while (!window.g || !window.g.viewer || !window.c) {
+        while (!window.g || !window.g.viewer || !window.c || !window.g.marker) {
             await new Promise((r) => setTimeout(r, 200));
         }
         const g = window.g, viewer = window.g.viewer, c = window.c;
         buildPanel();
+
+        // Nothing called this automatically before, so previously-placed
+        // marks never reappeared after a page refresh — they were saved
+        // fine (SaveOneToServer worked), just never fetched back.
+        g.marker.LoadFromServer().catch(() => {});
 
         const placeBtn = document.getElementById('marker_place_btn');
         placeBtn.addEventListener('click', () => setPlacing(g, !placing));

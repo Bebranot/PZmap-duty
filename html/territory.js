@@ -206,8 +206,30 @@
         let bbox;
         try {
             const range = c.getCanvasRange(true);
-            if (range.diffSum) return;
-            bbox = { x0: Math.floor(range.minX), y0: Math.floor(range.minY), x1: Math.ceil(range.maxX), y1: Math.ceil(range.maxY) };
+            if (range.diffSum) {
+                // Isometric view: the range is in rotated diff/sum coordinates
+                // (diff = x - y, sum = x + y — see coordinates.js's Range
+                // class), not plain x/y. The /api/territory endpoint only
+                // understands a plain x/y box, so convert the diff/sum bounds
+                // into the smallest axis-aligned x/y box that fully contains
+                // the visible diamond. This used to just bail out entirely in
+                // iso view (the default view!) so painted territory saved
+                // fine but never got loaded back after a refresh/pan.
+                const xs = [
+                    (range.minDiff + range.minSum) / 2, (range.minDiff + range.maxSum) / 2,
+                    (range.maxDiff + range.minSum) / 2, (range.maxDiff + range.maxSum) / 2,
+                ];
+                const ys = [
+                    (range.minSum - range.minDiff) / 2, (range.minSum - range.maxDiff) / 2,
+                    (range.maxSum - range.minDiff) / 2, (range.maxSum - range.maxDiff) / 2,
+                ];
+                bbox = {
+                    x0: Math.floor(Math.min(...xs)), y0: Math.floor(Math.min(...ys)),
+                    x1: Math.ceil(Math.max(...xs)), y1: Math.ceil(Math.max(...ys)),
+                };
+            } else {
+                bbox = { x0: Math.floor(range.minX), y0: Math.floor(range.minY), x1: Math.ceil(range.maxX), y1: Math.ceil(range.maxY) };
+            }
         } catch (e) {
             return;
         }
