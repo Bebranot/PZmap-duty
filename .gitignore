@@ -6,3 +6,4 @@ test_output/
 /scripts/marks/sprite_lookup.json
 .env
 data/
+.codegraph/

@@ -157,8 +157,6 @@ function text(id, mark, part) {
     g.svg.top.appendChild(e);
 }
 
-const ICON_PX_SIZE = 24; // on-screen pixel size for marker icons, independent of zoom
-
 function point(id, mark, part) {
     const { x, y } = part;
     const { color, background, icon } = mark;
@@ -172,12 +170,17 @@ function point(id, mark, part) {
 
     if (icon) {
         const step = (g.grid && g.grid.step) || 1;
-        const size = ICON_PX_SIZE / step;
+        const iconPx = mark.size || 32;
+        const size = iconPx / step;
         const e = newSVGElement('image', id, {
             x: cx - size / 2, y: cy - size / 2, width: size, height: size,
         });
         e.setAttributeNS('http://www.w3.org/1999/xlink', 'href', './pzmap/icons/' + icon + '.png');
         e.setAttribute('href', './pzmap/icons/' + icon + '.png');
+        if (color) {
+            e.setAttribute('color', color);
+            e.style.color = color;
+        }
         g.svg.top.appendChild(e);
         return;
     }

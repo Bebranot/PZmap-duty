@@ -181,16 +181,36 @@ function point(id, mark, part) {
     const placement = OpenSeadragon.Placement.CENTER;
     const element = upsertOverlay(id, 'div', point, placement, drawPoint.bind(null, mark, part));
     setClass(element, mark, part);
+    const iconSize = mark.size || g.zoomInfo.pointSize;
+    element.style.width = iconSize + 'px';
+    element.style.height = iconSize + 'px';
     element.style.display = 'block';
-    element.title = mark.name || '';
     if (mark.icon) {
+        element.title = '';
         element.style.border = 'none';
-        element.style['background-color'] = 'transparent';
-        element.style['background-image'] = `url('./pzmap/icons/${mark.icon}.png')`;
-        element.style['background-size'] = 'contain';
-        element.style['background-repeat'] = 'no-repeat';
-        element.style['background-position'] = 'center';
+        element.style['background-color'] = mark.color || 'white';
+        element.style['-webkit-mask-image'] = `url('./pzmap/icons/${mark.icon}.png')`;
+        element.style['mask-image'] = `url('./pzmap/icons/${mark.icon}.png')`;
+        element.style['-webkit-mask-size'] = 'contain';
+        element.style['mask-size'] = 'contain';
+        element.style['-webkit-mask-repeat'] = 'no-repeat';
+        element.style['mask-repeat'] = 'no-repeat';
+        element.style['-webkit-mask-position'] = 'center';
+        element.style['mask-position'] = 'center';
+        // label appears only on hover (see text() below)
+        element.style['pointer-events'] = 'auto';
+        element.style.cursor = 'pointer';
+        const textId = id.replace(/-\d+$/, '-1');
+        element.onmouseenter = function () {
+            const t = document.getElementById(textId);
+            if (t) t.style.display = 'block';
+        };
+        element.onmouseleave = function () {
+            const t = document.getElementById(textId);
+            if (t) t.style.display = 'none';
+        };
     } else {
+        element.title = mark.name || '';
         if (mark.color) {
             element.style['border-color'] = mark.color;
         }
@@ -218,18 +238,19 @@ function text(id, mark, part) {
     if (part.font || mark.font) {
         element.style.font = part.font || mark.font;
     }
-    const color = part.color || mark.color;
+    const color = part.color || (mark.icon ? mark.text_color : mark.color);
     if (color) {
         element.style.color = color;
         if (util.isLightColor(color)) {
             element.classList.add('light');
         }
     }
-    element.style.display = 'block';
+    // labels of icon markers are hidden until the icon is hovered (see point())
+    element.style.display = mark.icon ? 'none' : 'block';
     element.style['pointer-events'] = 'none';
     element.style['background-color'] = 'rgba(0,0,0,0)';
     element.style.border = 'none';
-    element.innerHTML = text;
+    element.textContent = text;
 }
 
 function drawSVG(mark, part, position, size, element) {

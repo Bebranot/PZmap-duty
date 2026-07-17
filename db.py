@@ -87,6 +87,14 @@ def init_db():
                     'VALUES (?, ?, ?, ?, ?)',
                     (key, name, color, role_id, leader_role_id),
                 )
+        # --- migrations ---
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(territory_squares)").fetchall()}
+        if 'paint_type' not in cols:
+            conn.execute("ALTER TABLE territory_squares ADD COLUMN paint_type TEXT DEFAULT ''")
+        if 'color' not in cols:
+            # optional per-square color override (from the preset palette);
+            # NULL means "use the painting faction's color" (the old behavior)
+            conn.execute("ALTER TABLE territory_squares ADD COLUMN color TEXT")
 
 
 if __name__ == '__main__':

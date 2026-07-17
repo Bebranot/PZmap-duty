@@ -142,6 +142,8 @@ class Mark {
             color: this.color ? this.color : null,
             background: this.background ? this.background : null,
             icon: this.icon ? this.icon : null,
+            size: this.size || null,
+            text_color: this.text_color || null,
             name: this.name,
             layer: this.layer,
             hash: this.hash(options),
@@ -223,7 +225,7 @@ class Point extends Mark {
             && Number.isInteger(obj.y))
     }
 
-    constructor(obj) { super(obj, ['x', 'y', 'layer', 'icon']); }
+    constructor(obj) { super(obj, ['x', 'y', 'layer', 'icon', 'size']); }
 
     start_drag(x, y) {
         this.sx = this.x;

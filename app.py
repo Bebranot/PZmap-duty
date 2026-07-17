@@ -218,6 +218,13 @@ def delete_mark(mark_id):
 
 MAX_BBOX_SQUARES = 200_000  # guardrail: refuse absurdly large bbox requests
 
+# Preset palette territory can be painted with, instead of a free color picker.
+# Validated server-side too so a direct API call can't smuggle an arbitrary color.
+TERRITORY_PALETTE = {
+    '#e74c3c', '#9b59b6', '#3498db', '#e67e22',
+    '#7f8c8d', '#2ecc71', '#f1c40f', '#1abc9c',
+}
+
 
 @app.route('/api/territory')
 @login_required
@@ -235,8 +242,12 @@ def list_territory():
 
     with get_db() as conn:
         rows = conn.execute(
-            '''SELECT ts.sq_x, ts.sq_y, ts.faction_id, f.key AS faction_key, f.color
-               FROM territory_squares ts JOIN factions f ON f.id = ts.faction_id
+            '''SELECT ts.sq_x, ts.sq_y, ts.faction_id, f.key AS faction_key,
+                      COALESCE(ts.color, f.color) AS color,
+                      u.username, ts.painted_at, ts.paint_type
+               FROM territory_squares ts
+               JOIN factions f ON f.id = ts.faction_id
+               JOIN users u ON u.id = ts.painted_by_user_id
                WHERE ts.layer = ? AND ts.sq_x BETWEEN ? AND ? AND ts.sq_y BETWEEN ? AND ?''',
             (layer, x0, x1, y0, y1),
         ).fetchall()
@@ -275,13 +286,17 @@ def paint_territory():
                 sx, sy = sq.get('x'), sq.get('y')
                 if sx is None or sy is None:
                     continue
+                raw_type = sq.get('paint_type') or ''
+                paint_type = str(raw_type)[:100]
+                raw_color = sq.get('color')
+                color = raw_color if raw_color in TERRITORY_PALETTE else None
                 conn.execute(
-                    '''INSERT INTO territory_squares (layer, sq_x, sq_y, faction_id, painted_by_user_id)
-                       VALUES (?, ?, ?, ?, ?)
+                    '''INSERT INTO territory_squares (layer, sq_x, sq_y, faction_id, painted_by_user_id, paint_type, color)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)
                        ON CONFLICT(layer, sq_x, sq_y) DO UPDATE SET
                          faction_id=excluded.faction_id, painted_by_user_id=excluded.painted_by_user_id,
-                         painted_at=datetime('now')''',
-                    (layer, sx, sy, user['faction_id'], user['id']),
+                         paint_type=excluded.paint_type, color=excluded.color, painted_at=datetime('now')''',
+                    (layer, sx, sy, user['faction_id'], user['id'], paint_type, color),
                 )
         return jsonify({'ok': True, 'count': len(squares)})
 
