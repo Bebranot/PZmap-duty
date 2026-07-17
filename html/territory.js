@@ -253,6 +253,7 @@
         if (!erasing) {
             body.paint_type = currentPaintType;
             body.color = currentPaintColor;
+            body.visibility = window.PZMAP_SCOPE || 'faction';
         }
 
         if (erasing) {
@@ -317,7 +318,10 @@
                     painted_at: new Date().toISOString(),
                     paint_type: currentPaintType,
                 });
-                toPaint.push({ x: cell.x, y: cell.y, paint_type: currentPaintType, color: myColor });
+                toPaint.push({
+                    x: cell.x, y: cell.y, paint_type: currentPaintType, color: myColor,
+                    visibility: window.PZMAP_SCOPE || 'faction',
+                });
             }
         }
 

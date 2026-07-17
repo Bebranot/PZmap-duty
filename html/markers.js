@@ -148,7 +148,7 @@
             text_color: textColor,
         };
         g.marker.load([obj]);
-        await g.marker.SaveOneToServer(obj, 'faction');
+        await g.marker.SaveOneToServer(obj, window.PZMAP_SCOPE || 'faction');
     }
 
     function setPlacing(g, on) {

@@ -59,6 +59,10 @@
 
           <!-- Branch 2: Faction features -->
           <ul class="sidebar-list" id="branch-custom" style="display:none;">
+            <li style="display:flex; gap:8px;">
+              <button id="scope-faction-tab" class="active" style="flex:1;">Фракция</button>
+              <button id="scope-public-tab" style="flex:1;">Общее</button>
+            </li>
             <li><button id="territory_paint_btn">Закрасить территорию</button></li>
             <li><button id="territory_erase_btn">Стереть территорию</button></li>
             <li><button id="territory_mode_btn">Режим: Выделение</button></li>
@@ -167,6 +171,23 @@
           standardTab.classList.toggle('active', !showCustom);
           customTab.classList.toggle('active', showCustom);
       }
+
+      // Shared "Фракция"/"Общее" scope, read by territory.js and markers.js
+      // when saving so newly painted territory/placed markers are visible
+      // only to your own faction, or to everyone on the map.
+      window.PZMAP_SCOPE = 'faction';
+      function initScopeToggle() {
+          const factionTab = document.getElementById('scope-faction-tab');
+          const publicTab = document.getElementById('scope-public-tab');
+          function setScope(scope) {
+              window.PZMAP_SCOPE = scope;
+              factionTab.classList.toggle('active', scope === 'faction');
+              publicTab.classList.toggle('active', scope === 'public');
+          }
+          factionTab.addEventListener('click', () => setScope('faction'));
+          publicTab.addEventListener('click', () => setScope('public'));
+      }
+      document.addEventListener('DOMContentLoaded', initScopeToggle);
     </script>
     <script type="text/javascript" src="auth.js"></script>
     <script type="text/javascript" src="pzmap.js"></script>

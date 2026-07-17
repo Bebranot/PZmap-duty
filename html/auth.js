@@ -44,6 +44,7 @@
             <option value="">Фракция (для регистрации)</option>
             ${options}
           </select>
+          <input id="pzmap-auth-faction-password" type="password" placeholder="Пароль фракции (для регистрации)" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; background:#111; border:1px solid #333; color:#eee; border-radius:4px;">
           <input id="pzmap-auth-discord" placeholder="Discord ID (для регистрации)" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:8px; background:#111; border:1px solid #333; color:#eee; border-radius:4px;">
           <div style="display:flex; gap:8px;">
             <button id="pzmap-auth-login-btn" style="flex:1; padding:8px; cursor:pointer;">Войти</button>
@@ -65,6 +66,7 @@
             username: document.getElementById('pzmap-auth-username').value.trim(),
             password: document.getElementById('pzmap-auth-password').value,
             faction: document.getElementById('pzmap-auth-faction').value,
+            faction_password: document.getElementById('pzmap-auth-faction-password').value,
             discord_id: document.getElementById('pzmap-auth-discord').value.trim(),
         };
     }
@@ -115,6 +117,10 @@
                 const form = readForm();
                 if (!form.faction) {
                     showError('Выбери фракцию для регистрации');
+                    return;
+                }
+                if (!form.faction_password) {
+                    showError('Введи пароль фракции');
                     return;
                 }
                 await api('/api/auth/register', form);

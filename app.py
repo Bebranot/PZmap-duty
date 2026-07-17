@@ -55,6 +55,7 @@ def register():
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
     faction_key = data.get('faction') or ''
+    faction_password = data.get('faction_password') or ''
     discord_id = (data.get('discord_id') or '').strip() or None
 
     if not USERNAME_RE.match(username):
@@ -66,14 +67,15 @@ def register():
         faction = conn.execute('SELECT * FROM factions WHERE key = ?', (faction_key,)).fetchone()
         if not faction:
             return jsonify({'error': 'invalid_faction'}), 400
+        if not faction['password_hash'] or not check_password_hash(faction['password_hash'], faction_password):
+            # each faction has its own shared password (told to members out-of-band,
+            # e.g. in Discord) proving they're actually eligible to join it
+            return jsonify({'error': 'invalid_faction_password'}), 400
         if conn.execute('SELECT 1 FROM users WHERE username = ?', (username,)).fetchone():
             return jsonify({'error': 'username_taken'}), 409
 
         is_deputy = 0
         is_leader = 0
-        # NOTE: Discord role verification against bot.py is not wired up yet
-        # (needs DISCORD_GUILD_ID + a running bot.py). Until then, registration
-        # trusts the self-reported faction. See plan doc for the intended check.
 
         password_hash = generate_password_hash(password)
         cur = conn.execute(
@@ -224,6 +226,7 @@ TERRITORY_PALETTE = {
     '#e74c3c', '#9b59b6', '#3498db', '#e67e22',
     '#7f8c8d', '#2ecc71', '#f1c40f', '#1abc9c',
 }
+TERRITORY_VISIBILITY_VALUES = {'faction', 'public'}
 
 
 @app.route('/api/territory')
@@ -241,15 +244,18 @@ def list_territory():
         return jsonify({'error': 'bbox_too_large'}), 400
 
     with get_db() as conn:
+        user = current_user(conn)
         rows = conn.execute(
             '''SELECT ts.sq_x, ts.sq_y, ts.faction_id, f.key AS faction_key,
                       COALESCE(ts.color, f.color) AS color,
-                      u.username, ts.painted_at, ts.paint_type
+                      u.username, ts.painted_at, ts.paint_type, ts.visibility
                FROM territory_squares ts
                JOIN factions f ON f.id = ts.faction_id
                JOIN users u ON u.id = ts.painted_by_user_id
-               WHERE ts.layer = ? AND ts.sq_x BETWEEN ? AND ? AND ts.sq_y BETWEEN ? AND ?''',
-            (layer, x0, x1, y0, y1),
+               WHERE ts.layer = ? AND ts.sq_x BETWEEN ? AND ? AND ts.sq_y BETWEEN ? AND ?
+                 AND (ts.visibility = 'public'
+                      OR (ts.visibility = 'faction' AND ts.faction_id = ?))''',
+            (layer, x0, x1, y0, y1, user['faction_id']),
         ).fetchall()
         return jsonify([dict(r) for r in rows])
 
@@ -290,13 +296,16 @@ def paint_territory():
                 paint_type = str(raw_type)[:100]
                 raw_color = sq.get('color')
                 color = raw_color if raw_color in TERRITORY_PALETTE else None
+                raw_visibility = sq.get('visibility')
+                visibility = raw_visibility if raw_visibility in TERRITORY_VISIBILITY_VALUES else 'faction'
                 conn.execute(
-                    '''INSERT INTO territory_squares (layer, sq_x, sq_y, faction_id, painted_by_user_id, paint_type, color)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)
+                    '''INSERT INTO territory_squares (layer, sq_x, sq_y, faction_id, painted_by_user_id, paint_type, color, visibility)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                        ON CONFLICT(layer, sq_x, sq_y) DO UPDATE SET
                          faction_id=excluded.faction_id, painted_by_user_id=excluded.painted_by_user_id,
-                         paint_type=excluded.paint_type, color=excluded.color, painted_at=datetime('now')''',
-                    (layer, sx, sy, user['faction_id'], user['id'], paint_type, color),
+                         paint_type=excluded.paint_type, color=excluded.color, visibility=excluded.visibility,
+                         painted_at=datetime('now')''',
+                    (layer, sx, sy, user['faction_id'], user['id'], paint_type, color, visibility),
                 )
         return jsonify({'ok': True, 'count': len(squares)})
 
