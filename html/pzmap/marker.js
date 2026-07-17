@@ -242,6 +242,19 @@ export class MarkManager {
         return resp.json();
     }
 
+    // Save a single mark object without touching the visibility of every other
+    // already-loaded mark (SaveToServer() re-saves the whole db.all() batch under
+    // one visibility, which would silently overwrite unrelated marks' visibility).
+    async SaveOneToServer(obj, visibility = 'faction') {
+        const resp = await window.fetch('/api/marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ marks: [obj], visibility }),
+        });
+        return resp.json();
+    }
+
     async DeleteFromServer(id) {
         const resp = await window.fetch('/api/marks/' + encodeURIComponent(id), {
             method: 'DELETE',

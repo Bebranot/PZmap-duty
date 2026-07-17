@@ -34,9 +34,18 @@
           </div>
           <div class="divider"></div>
 
-          <!-- Main Buttons -->
-          <ul class="sidebar-list">
-            
+          <!-- Sidebar Branches -->
+          <ul class="sidebar-list" id="branch-tabs">
+            <li style="display:flex; gap:8px;">
+              <button id="branch-standard-tab" class="active" style="flex:1;" onclick="switchSidebarBranch('standard')">Стандарт</button>
+              <button id="branch-custom-tab" style="flex:1;" onclick="switchSidebarBranch('custom')">Наше</button>
+            </li>
+          </ul>
+          <div class="divider"></div>
+
+          <!-- Branch 1: Main Buttons -->
+          <ul class="sidebar-list" id="branch-standard">
+
             <li><button id="pois_btn" onclick="togglePOIs()">POIs</button></li>
             <li><button id="lock_coords_btn" onclick="toggleCoordinatesLock()">Lock Coordinates</button></li>
             <!-- <li><button id="zombie_btn" onclick="toggleOverlay('zombie')">Zombie</button></li> -->
@@ -46,6 +55,13 @@
             <li><button id="objects_btn" onclick="toggleOverlay('objects')">Objects</button></li>
             <li><button id="grid_btn" onclick="toggleGrid()">Grid</button></li>
             <li><button id="help_wiki_btn" onclick="window.open('https://pzwiki.net/wiki/PZwiki:Project_Build_42_Update', '_blank')">Help the wiki!</button></li>
+          </ul>
+
+          <!-- Branch 2: Faction features -->
+          <ul class="sidebar-list" id="branch-custom" style="display:none;">
+            <li><button id="territory_paint_btn">Закрасить территорию</button></li>
+            <li><button id="territory_erase_btn">Стереть территорию</button></li>
+            <li><button id="marker_place_btn">Метки</button></li>
           </ul>
 
           <!-- Help Section -->
@@ -134,8 +150,22 @@
       </div>
     </div>
     
+    <script type="text/javascript">
+      function switchSidebarBranch(branch) {
+          const standard = document.getElementById('branch-standard');
+          const custom = document.getElementById('branch-custom');
+          const standardTab = document.getElementById('branch-standard-tab');
+          const customTab = document.getElementById('branch-custom-tab');
+          const showCustom = branch === 'custom';
+          standard.style.display = showCustom ? 'none' : 'flex';
+          custom.style.display = showCustom ? 'flex' : 'none';
+          standardTab.classList.toggle('active', !showCustom);
+          customTab.classList.toggle('active', showCustom);
+      }
+    </script>
     <script type="text/javascript" src="auth.js"></script>
     <script type="text/javascript" src="pzmap.js"></script>
     <script type="text/javascript" src="territory.js"></script>
+    <script type="text/javascript" src="markers.js"></script>
   </body>
 </html>

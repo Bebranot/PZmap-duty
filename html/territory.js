@@ -95,27 +95,25 @@
     }
 
     function addToolbar() {
-        const bar = document.createElement('div');
-        bar.id = 'territory-toolbar';
-        bar.style.cssText = 'position:fixed; bottom:8px; right:8px; z-index:9998; display:flex; gap:6px;';
-        bar.innerHTML = `
-      <button id="territory-paint-btn" style="padding:8px 12px; cursor:pointer;">🖌 Закрасить территорию</button>
-      <button id="territory-erase-btn" style="padding:8px 12px; cursor:pointer; display:none;">🧹 Стереть</button>
-    `;
-        document.body.appendChild(bar);
-        const paintBtn = document.getElementById('territory-paint-btn');
-        const eraseBtn = document.getElementById('territory-erase-btn');
+        // buttons live in the "Наше" sidebar branch (pzmap.html), styled to
+        // match the existing POIs/Streets/etc buttons via .sidebar-list CSS.
+        const paintBtn = document.getElementById('territory_paint_btn');
+        const eraseBtn = document.getElementById('territory_erase_btn');
         paintBtn.addEventListener('click', () => {
             paintMode = !paintMode;
-            paintBtn.style.background = paintMode ? '#2ecc71' : '';
-            eraseBtn.style.display = paintMode ? 'inline-block' : 'none';
+            paintBtn.classList.toggle('active', paintMode);
+            if (!paintMode && erasing) {
+                erasing = false;
+                eraseBtn.classList.remove('active');
+            }
             // canvas stays pointer-events:none always so OSD's own canvas-click/
             // canvas-drag handlers (bound to the OSD canvas underneath) still fire;
             // we only use this canvas to draw the overlay, never to catch clicks.
         });
         eraseBtn.addEventListener('click', () => {
+            if (!paintMode) return;
             erasing = !erasing;
-            eraseBtn.style.background = erasing ? '#e74c3c' : '';
+            eraseBtn.classList.toggle('active', erasing);
         });
     }
 
