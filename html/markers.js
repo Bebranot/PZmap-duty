@@ -27,7 +27,10 @@
     const TEXT_COLORS = ['#ffffff', '#000000', '#f1c40f', '#e74c3c', '#2ecc71', '#3498db'];
     const DOT_COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#e67e22', '#7f8c8d', '#2ecc71', '#f1c40f', '#1abc9c'];
 
+    const DELETE_RADIUS_SQUARES = 3; // click tolerance when picking a mark to delete
+
     let placing = false;
+    let deleting = false;
     let selectedIcon = null;
     let selectedSize = 32;
     let textColor = TEXT_COLORS[0];
@@ -146,9 +149,67 @@
             color: dotColor,
             background: dotColor,
             text_color: textColor,
+            // set immediately so the mark is deletable right away, without
+            // waiting for a reload to pick up the server-assigned owner
+            owner_user_id: window.PZMAP_USER ? window.PZMAP_USER.id : undefined,
         };
         g.marker.load([obj]);
         await g.marker.SaveOneToServer(obj, window.PZMAP_SCOPE || 'faction');
+    }
+
+    function showWarning(msg) {
+        let el = document.getElementById('markers-warning');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'markers-warning';
+            el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#e74c3c;color:#fff;padding:12px 24px;border-radius:8px;font-family:sans-serif;font-size:14px;z-index:99999;pointer-events:none;';
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.opacity = '1';
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+    }
+
+    // Find the closest deletable (owned) mark to a click, within a small
+    // radius — mirrors territory.js's ownership-gated erase: only your own
+    // marks (or a faction deputy's) are ever offered for deletion, and
+    // marks without an owner_user_id at all (locked-coordinate pin, POIs,
+    // room/object overlays loaded into the same MarkManager) are skipped
+    // entirely since they were never something a user "placed".
+    function findDeletableMarkNear(g, sx, sy) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const mark of g.marker.db.all()) {
+            if (mark.owner_user_id === undefined || mark.owner_user_id === null) continue;
+            if (mark.layer !== g.currentLayer) continue;
+            const isOwner = mark.owner_user_id === (window.PZMAP_USER && window.PZMAP_USER.id);
+            const isDeputy = window.PZMAP_USER && window.PZMAP_USER.is_deputy;
+            if (!isOwner && !isDeputy) continue;
+            if (typeof mark.center !== 'function') continue;
+            const [mx, my] = mark.center();
+            const dist = Math.hypot(mx - sx, my - sy);
+            if (dist <= DELETE_RADIUS_SQUARES && dist < bestDist) {
+                best = mark;
+                bestDist = dist;
+            }
+        }
+        return best;
+    }
+
+    async function deleteAt(g, c, event) {
+        const [sx, sy] = c.getSquare(event);
+        const mark = findDeletableMarkNear(g, sx, sy);
+        if (!mark) {
+            showWarning('Рядом нет твоей метки для удаления');
+            return;
+        }
+        const result = await g.marker.DeleteFromServer(mark.id);
+        if (result && result.error) {
+            showWarning('Не удалось удалить: ' + result.error);
+            return;
+        }
+        g.marker.remove(mark.id);
     }
 
     function setPlacing(g, on) {
@@ -160,6 +221,14 @@
             selectedIcon = null;
             panel.querySelectorAll('.mk-icon-btn').forEach((b) => b.classList.remove('active'));
         }
+        if (on && deleting) setDeleting(g, false);
+    }
+
+    function setDeleting(g, on) {
+        deleting = on;
+        const btn = document.getElementById('marker_delete_btn');
+        btn.classList.toggle('active', deleting);
+        if (on && placing) setPlacing(g, false);
     }
 
     async function init() {
@@ -177,10 +246,19 @@
         const placeBtn = document.getElementById('marker_place_btn');
         placeBtn.addEventListener('click', () => setPlacing(g, !placing));
 
+        const deleteBtn = document.getElementById('marker_delete_btn');
+        deleteBtn.addEventListener('click', () => setDeleting(g, !deleting));
+
         viewer.addHandler('canvas-click', (event) => {
-            if (!placing) return;
-            event.preventDefaultAction = true;
-            placeAt(g, c, event);
+            if (placing) {
+                event.preventDefaultAction = true;
+                placeAt(g, c, event);
+                return;
+            }
+            if (deleting) {
+                event.preventDefaultAction = true;
+                deleteAt(g, c, event);
+            }
         });
 
         nameInput.addEventListener('keydown', (e) => {

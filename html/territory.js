@@ -241,6 +241,7 @@
         for (const row of rows) {
             squares.set(key(layer, row.sq_x, row.sq_y), {
                 faction_id: row.faction_id,
+                painted_by_user_id: row.painted_by_user_id,
                 color: row.color,
                 username: row.username || '',
                 painted_at: row.painted_at || '',
@@ -248,6 +249,20 @@
             });
         }
         redraw(g, viewer, c);
+    }
+
+    // Mirrors the server-side ownership check in app.py's paint_territory()
+    // erase branch (owner or a same-faction deputy). Used to decide whether
+    // an erase click should even be attempted/optimistically reflected —
+    // without this, clicking a square you don't own would make it vanish
+    // from *your* screen (squares.delete ran unconditionally) even though
+    // the server correctly refused to delete it, so it would reappear on
+    // the next reload looking like a bug instead of "not yours".
+    function canErase(sq) {
+        if (!sq || !window.PZMAP_USER) return false;
+        const isOwner = sq.painted_by_user_id === window.PZMAP_USER.id;
+        const isDeputy = window.PZMAP_USER.is_deputy && sq.faction_id === window.PZMAP_USER.faction_id;
+        return isOwner || isDeputy;
     }
 
     function scheduleLoad(g, viewer, c) {
@@ -279,9 +294,16 @@
         }
 
         if (erasing) {
+            const sq = squares.get(k);
+            if (!canErase(sq)) {
+                if (sq) showBoxWarning('Это не твоя клетка');
+                return;
+            }
             squares.delete(k);
         } else {
             squares.set(k, {
+                faction_id: window.PZMAP_USER.faction_id,
+                painted_by_user_id: window.PZMAP_USER.id,
                 color: currentPaintColor || window.PZMAP_USER.faction_color,
                 username: window.PZMAP_USER.username,
                 painted_at: new Date().toISOString(),
@@ -327,14 +349,18 @@
             const k = key(layer, cell.x, cell.y);
             if (erasing) {
                 const sq = squares.get(k);
-                if (sq) {
+                if (sq && canErase(sq)) {
                     squares.delete(k);
                     toPaint.push({ x: cell.x, y: cell.y });
                 }
+                // squares you don't own are silently skipped (not sent, not
+                // touched locally) — same "only yours" rule as single-click erase
             } else {
                 const sq = squares.get(k);
                 if (sq && sq.color === myColor) continue;
                 squares.set(k, {
+                    faction_id: window.PZMAP_USER.faction_id,
+                    painted_by_user_id: window.PZMAP_USER.id,
                     color: myColor,
                     username: window.PZMAP_USER.username,
                     painted_at: new Date().toISOString(),

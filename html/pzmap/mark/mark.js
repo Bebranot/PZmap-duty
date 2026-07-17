@@ -48,6 +48,13 @@ class Mark {
         text_position: 'center',
 
         text_color: undefined,
+
+        // server-assigned owner (see app.py's marks table); used client-side
+        // to decide whether the current user is allowed to delete this mark.
+        // Never trust this for anything security-sensitive — the server
+        // re-checks ownership on every delete regardless of what the client
+        // sends.
+        owner_user_id: undefined,
     };
 
     constructor(obj, keys) {

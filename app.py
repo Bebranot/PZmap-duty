@@ -117,8 +117,10 @@ def me():
         faction = conn.execute('SELECT * FROM factions WHERE id = ?', (user['faction_id'],)).fetchone()
         return jsonify({
             'authenticated': True,
+            'id': user['id'],
             'username': user['username'],
             'faction': faction['key'],
+            'faction_id': faction['id'],
             'faction_name': faction['name'],
             'faction_color': faction['color'],
             'is_deputy': bool(user['is_deputy']),
@@ -248,7 +250,7 @@ def list_territory():
         rows = conn.execute(
             '''SELECT ts.sq_x, ts.sq_y, ts.faction_id, f.key AS faction_key,
                       COALESCE(ts.color, f.color) AS color,
-                      u.username, ts.painted_at, ts.paint_type, ts.visibility
+                      u.username, ts.painted_by_user_id, ts.painted_at, ts.paint_type, ts.visibility
                FROM territory_squares ts
                JOIN factions f ON f.id = ts.faction_id
                JOIN users u ON u.id = ts.painted_by_user_id

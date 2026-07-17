@@ -230,7 +230,10 @@ export class MarkManager {
         const resp = await window.fetch('/api/marks', { credentials: 'same-origin' });
         if (!resp.ok) return [];
         const rows = await resp.json();
-        const objs = rows.map((r) => r.mark);
+        // owner_user_id lives on the row wrapper, not inside geometry_json —
+        // stitch it back onto the mark object so client-side delete-permission
+        // checks (markers.js) have something to compare against.
+        const objs = rows.map((r) => ({ ...r.mark, owner_user_id: r.owner_user_id }));
         this.load(objs);
         return rows;
     }
