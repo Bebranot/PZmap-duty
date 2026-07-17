@@ -408,7 +408,9 @@
     }
 
     function handleMouseMove(g, c, event) {
-        if (!paintMode) { hideTooltip(); return; }
+        // Tooltip works whenever territory data is loaded, not just while
+        // paint mode is on — you should be able to see who painted a zone
+        // just by hovering, without switching into edit mode first.
         try {
             const [sx, sy] = c.getSquare(event);
             const k = key(g.currentLayer, sx, sy);
@@ -503,7 +505,6 @@
                 erasing = false;
                 eraseBtn.classList.remove('active');
             }
-            if (!paintMode) hideTooltip();
         });
 
         eraseBtn.addEventListener('click', () => {
@@ -641,7 +642,6 @@
         // --- Tooltip on mouse move (DOM event, not OSD) ---
         const mapDiv = document.getElementById('map_div');
         mapDiv.addEventListener('mousemove', (e) => {
-            if (!paintMode) { hideTooltip(); return; }
             const rect = mapDiv.getBoundingClientRect();
             const fakeEvent = {
                 position: {
